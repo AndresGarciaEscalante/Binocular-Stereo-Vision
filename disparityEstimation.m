@@ -9,31 +9,42 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     % Seeking the name of the Images in the Folder ExampleImages.
     try
         cd ExampleImages
-        imgLeft = imread(imageLeft);
-        imgRight = imread(imageRight);
-        %Displaying the information
-        size(imgLeft)
-        figure
-        imshow(imgLeft);
-        figure
-        imshow(imgRight);
-        % Going to the previous folder
-        cd ..\
-        disparityMap = 5;
+        imgLeft = imread(imageLeft);   %Left Image data stored in imgLeft
+        imgRight = imread(imageRight); %Rigth Image data stored in imgRight
+        
     %In the case the images were not found in the ExampleImages folder,
     %an error will be displayed.
     catch
         cd ..\
         error('Please make sure that the images are inside the folder "ExampleImages"')
     end 
-end
+    
+    %Displaying the information
+    leftImageRows = size(imgLeft,1); 
+    leftImageColumns = size(imgLeft,2);
+    disparityMap = zeros(leftImageRows,leftImageColumns);
+    figure
+    imshow(imgLeft);
+    %hold on 
+    
+%     for i = 1: leftImageRows
+%         for j = 1: leftImageColumns 
+            rectangle('Position',[1-16,1-16 , 31, 31],'LineWidth',2, 'EdgeColor', 'r')
+%         end
+%     end
+    %hold off
+%     figure
+%     imshow(imgRight);
 
-%% Read the first to see how large it should be
-%im = imread(filenames{1});
-%data = repmat(uint8(0),[size(im,1) size(im,2) length(filenames)]);
-%for ii = 1:length(filenames)
-%        data(:,:,ii) = imread(filenames{ii});
-%end
+
+    [featureVector,hogVisualization] = extractHOGFeatures(imgLeft,'CellSize',[50 50]);
+    figure;
+    imshow(imgLeft); 
+    hold on;
+    plot(hogVisualization);
+    % Going to the previous folder
+    cd ..\
+end
 
 %% Task 2
 %% Plot frame 1
