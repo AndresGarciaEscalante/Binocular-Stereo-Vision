@@ -20,12 +20,13 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     end 
     
     %Displaying the information
-    leftImageRows = size(imgLeft,1)
-    leftImageColumns = size(imgLeft,2)
+    leftImageRows = size(imgLeft,1);
+    leftImageColumns = size(imgLeft,2);
     disparityMap = zeros(leftImageRows,leftImageColumns);
     % The window moving in all the image.
     windowSize= 31;  % Value of the dimensions of the window (Rectangle)
     windowOffset=15; % Offset needed to put the desired pixel in the middle
+    % Display the actual window size.
     figure
     imshow(imgLeft);
     hold on 
@@ -37,30 +38,31 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
         end
     end
     hold off
-%     figure
-%     imshow(imgRight);
-    [featureVector,hogVisualization] = extractHOGFeatures(imgLeft,'CellSize',[50 50]);
+    % Extract the window's local position
+    cut= imgLeft(1:31,1:31,:); % Is it necessary to copy the 3 matrix?
+    figure
+    imshow(cut);
+%   figure
+%   imshow(imgRight);
+    % Apply Hog in the provided 
+    [featureVector,hogVisualization] = extractHOGFeatures(cut,'CellSize',[15 10]);
+    disp(featureVector)
+    disparityMap = featureVector;
     figure;
-    imshow(imgLeft); 
+    imshow(cut); 
     hold on;
     plot(hogVisualization);
+    hold off
     % Going to the previous folder
     cd ..\
+    
 end
 
-%% Task 2
-%% Plot frame 1
-%figure('Name', "Frame 1"); imagesc(squeeze(data(:,:,1))); colormap(gray)
+% function sum = sumOfNumbers(A,B)
+%     sum = A+B;
+% end
 
 
-% %% Task 3
-% %% Draw a rectangle around the face on top of the image.
-% %% The rectangle should be located at location (row, col) = (76, 142)
-% %% and should have (width, height) = (32, 32) pixels
-% hold on 
-% rectangle('Position',[142, 76, 30, 30],'LineWidth',2, 'EdgeColor', 'r')
-% hold off
-% 
 % %% Task 4 
 % %% Extract the template face from the image and plot template
 % start_r = 76; 
