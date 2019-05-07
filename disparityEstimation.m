@@ -20,23 +20,25 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     end 
     
     %Displaying the information
-    leftImageRows = size(imgLeft,1); 
-    leftImageColumns = size(imgLeft,2);
+    leftImageRows = size(imgLeft,1)
+    leftImageColumns = size(imgLeft,2)
     disparityMap = zeros(leftImageRows,leftImageColumns);
+    % The window moving in all the image.
+    windowSize= 31;  % Value of the dimensions of the window (Rectangle)
+    windowOffset=15; % Offset needed to put the desired pixel in the middle
     figure
     imshow(imgLeft);
-    %hold on 
-    
-%     for i = 1: leftImageRows
-%         for j = 1: leftImageColumns 
-            rectangle('Position',[1-16,1-16 , 31, 31],'LineWidth',2, 'EdgeColor', 'r')
-%         end
-%     end
-    %hold off
+    hold on 
+    for i = 1: leftImageRows-1
+        for j = 1: leftImageColumns-1
+            if ((j == 1)&&(i == 1)) || ((j == 449)&&(i == 374))
+                rectangle('Position',[j-windowOffset,i-windowOffset,windowSize,windowSize],'LineWidth',1, 'EdgeColor', 'r')
+            end
+        end
+    end
+    hold off
 %     figure
 %     imshow(imgRight);
-
-
     [featureVector,hogVisualization] = extractHOGFeatures(imgLeft,'CellSize',[50 50]);
     figure;
     imshow(imgLeft); 
