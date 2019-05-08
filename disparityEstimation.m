@@ -30,30 +30,59 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     figure
     imshow(imgLeft);
     hold on 
-    for i = 1: leftImageRows-1
+    % Iteration Zone
+%     k=0;
+%     for i = 1: leftImageRows-1
+%         for j = 1: leftImageColumns-1
+%             for windowPos = 1: leftImageColumns-1
+%                 k=k+1;
+%             end
+% %             if ((j == 1)&&(i == 1)) || ((j == 449)&&(i == 374))
+% %                 rectangle('Position',[j-windowOffset,i-windowOffset,windowSize,windowSize],'LineWidth',1, 'EdgeColor', 'r')
+% %             end
+%         end
+%     end
+      
+    % Iteration Zone
+    k=0;
+%     for i = 1: leftImageRows-1
         for j = 1: leftImageColumns-1
-            if ((j == 1)&&(i == 1)) || ((j == 449)&&(i == 374))
-                rectangle('Position',[j-windowOffset,i-windowOffset,windowSize,windowSize],'LineWidth',1, 'EdgeColor', 'r')
+            for windowPos = 1: leftImageColumns-1
+                
+ 
             end
         end
-    end
-    hold off
-    % Extract the window's local position
-    cut= imgLeft(1:31,1:31,:); % Is it necessary to copy the 3 matrix?
+%     end
+
+%     %Eclidean Distance
+     tA = imgLeft(1:31,1:31,:);
+     tB = imgRight(1:31,1:31,:);
+%     [featureVector1] = extractHOGFeatures(tA,'CellSize',[15 10]);
+%     [featureVector2] = extractHOGFeatures(tA,'CellSize',[15 10]);
+%     eD = sqrt(sum((featureVector1(:)-featureVector2(:)).^2))
+%     
+%     hold off
+%     % Extract the window's local position
+%     cut= imgLeft(1:31,1:31,:); % Is it necessary to copy the 3 matrix?
+%     figure
+%     imshow(cut);
+    
     figure
-    imshow(cut);
-%   figure
-%   imshow(imgRight);
-    % Apply Hog in the provided 
-    [featureVector,hogVisualization] = extractHOGFeatures(cut,'CellSize',[15 10]);
-    disp(featureVector)
-    disparityMap = featureVector;
+    imshow(imgRight);
+    %Apply Hog in the provided 
+    f= zeros(leftImageRows,leftImageColumns);
+    [featureVector,hogVisualization] = extractHOGFeatures(imgLeft,'CellSize',[10 10]); % 15 10 (6 per Window), and 10 10 (9 per window)
+    [featureVector1,hogVisualization1] = extractHOGFeatures(f,'CellSize',[10 10]); 
+    disparityMap = featureVector1;
+    disparityMap = max(disparityMap);
     figure;
-    imshow(cut); 
+%     imshow(imgLeft); 
+    imshow(f); 
     hold on;
-    plot(hogVisualization);
+    plot(hogVisualization1);
+%     plot(hogVisualization);
     hold off
-    % Going to the previous folder
+    %Going to the previous folder
     cd ..\
     
 end
