@@ -27,12 +27,10 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     leftImageColumns = size(imgLeft,2);   %NumberOfColumnsLeftImage
     rightImageRows = size(imgRight,1);    %NumberOfRowsRightImage 
     rightImageColumns = size(imgRight,2); %NumberOfColumnsRightImage
-    rightWindow = zeros(windowSize,windowSize);%Matrix (windowSize x windowSize)
-    leftWindow = zeros(windowSize,windowSize); %Matrix (windowSize x windowSize)
     disparityMap = zeros(leftImageRows,leftImageColumns); %DM LeftImageSize
     % New part creating a new matrix with more pixels (This Matrices must be uint8 type)
     biggerImgLeft = uint8(zeros(leftImageRows+windowOffset*2,leftImageColumns+windowOffset*2,3));   % LeftImage + 2*WindowOffset in the edges  ********Maybe we only need 1 dimension and not 3******
-    biggerImgRight = uint8(zeros(rightImageRows+windowOffset*2,rightImageColumns+windowOffset*2,3));% RightImage + 2*WindowOffset in the edges ********Maybe we only need 1 dimension and not 3******
+    biggerImgRight = uint8(ones(rightImageRows+windowOffset*2,rightImageColumns+windowOffset*2,3)*255);% RightImage + 2*WindowOffset in the edges ********Maybe we only need 1 dimension and not 3******
     %Adding the image to the new matrix.
     biggerImgLeft(windowOffset+1:leftImageRows+windowOffset,windowOffset+1:leftImageColumns+windowOffset,:)= imgLeft(:,:,:);
     biggerImgRight(windowOffset+1:rightImageRows+windowOffset,windowOffset+1:rightImageColumns+windowOffset,:)= imgRight(:,:,:);
@@ -41,7 +39,7 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
 %     figure
 %     imshow(biggerImgLeft)
 %     figure
-%     imshow(biggerImgRight) (End Report Material!!!!!!!) 
+%     imshow(biggerImgRight) %(End Report Material!!!!!!!) 
 
 %     %Extract the template from the new matrix (Report Material!!!!!!!) 
 %     ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,:);
@@ -69,30 +67,25 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     %Observavtions: Maybe the Edges of the images should be different (White Black)
     %#############################################################
     
-    % Iteration Zone
-    k=0;
+%   Iteration Zone
 %     for i = windowOffset+1:leftImageRows+windowOffset 
 %       for j = windowOffset+1:leftImageColumns+windowOffset
 %           for jj = windowOffset+1: rightImageColumns+windowOffset
-    eD = ones(rightImageColumns,1);
+   
+    eD = ones(1,rightImageColumns);
     for i = windowOffset+1:windowOffset+1     % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
-        for j = windowOffset+1:windowOffset+1 % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
+        for j = windowOffset+1:leftImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
             tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,:); %Extract Template from Left Image
-            [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]);
+            [tlFeature,tlhogVisualization] = extractHOGFeatures(tl,'CellSize',[15 10]);
             for jj = windowOffset+1: rightImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
                 tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,:);
-                [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
+                [trFeature,trhogVisualization] = extractHOGFeatures(tr,'CellSize',[15 10]);     
                 eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
-                k=k+1;
             end
-            
+            pos =find(eD == min(eD))% Gives the position of the smaller value in the corespondence
+            disparityMap(i-windowOffset,j-windowOffset) = pos; %Updates the Matrix DisparityMap
         end
-    end   
-    find(min(eD))% Gives the position of the smaller value
-    disp(k)
-    disparityMap = eD;
-    figure
-    imshow(tr)    
+    end    
     %Going to the previous folder
     cd ..\
 end
