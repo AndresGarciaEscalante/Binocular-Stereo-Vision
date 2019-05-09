@@ -36,112 +36,65 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     %Adding the image to the new matrix.
     biggerImgLeft(windowOffset+1:leftImageRows+windowOffset,windowOffset+1:leftImageColumns+windowOffset,:)= imgLeft(:,:,:);
     biggerImgRight(windowOffset+1:rightImageRows+windowOffset,windowOffset+1:rightImageColumns+windowOffset,:)= imgRight(:,:,:);
+
 %     %Ploting Both Images (Report Material!!!!!!!)
 %     figure
 %     imshow(biggerImgLeft)
 %     figure
-%     imshow(biggerImgRight)
+%     imshow(biggerImgRight) (End Report Material!!!!!!!) 
 
-    %Extract the template from the new matrix (Report Material!!!!!!!)
-    ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,:);
-    [taFeature,tahogVisualization] = extractHOGFeatures(ta,'CellSize',[15 10]);
-    tb = biggerImgRight(1:windowSize+1-1,1:windowSize+1-1,:);
-    [tbFeature,tbhogVisualization] = extractHOGFeatures(tb,'CellSize',[15 10]);
-    figure('Name', "Templates Image Left and Image Right"); 
-    %Plotting the Template A
-    subplot(2,1,1);
-    imshow(ta); 
-    hold on;
-    plot(tahogVisualization);
-    rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'r')
-    hold off
-    %Plotting the Template B
-    subplot(2,1,2);
-    imshow(tb); 
-    hold on;
-    plot(tbhogVisualization);
-    rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'b')
-    hold off
-    disparityMap = tbFeature;
-    
+%     %Extract the template from the new matrix (Report Material!!!!!!!) 
+%     ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,:);
+%     [taFeature,tahogVisualization] = extractHOGFeatures(ta,'CellSize',[15 10]);
+%     tb = biggerImgRight(1:windowSize+1-1,1:windowSize+1-1,:);
+%     [tbFeature,tbhogVisualization] = extractHOGFeatures(tb,'CellSize',[15 10]);
+%     figure('Name', "Templates Image Left and Image Right"); 
+%     %Plotting the Template A
+%     subplot(2,1,1);
+%     imshow(ta); 
+%     hold on;
+%     plot(tahogVisualization);
+%     rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'r')
+%     hold off
+%     %Plotting the Template B
+%     subplot(2,1,2);
+%     imshow(tb); 
+%     hold on;
+%     plot(tbhogVisualization);
+%     rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'b')
+%     hold off                                                (End Report Material!!!!!!!) 
     
     %#########################TO DO ##############################
     %Apply the HOG in the image for only 1 row of the new matrix
     %Observavtions: Maybe the Edges of the images should be different (White Black)
     %#############################################################
     
-    
-%     ta = imgLeft(1:windowSize+1-1,1:windowSize+1-1,:); % Problem
-%     figure
-%     imshow(ta);
-    
-%     % Iteration Zone
-%     for i = 1: leftImageRows         % RowPositionOfTheCenterPointOfWindow (i)
-%         for j = 1: leftImageColumns  % ColumnPositionOfTheCenterPointOfWindow (j) 
-%             leftWindow = zeros(windowSize,windowSize); % Matrix (windowSize x windowSize)
-%             ta = imgLeft(i:windowSize+i-1,j:windowSize+j-1,:); % Problem
-%         end
-%     end
-
-%     % Iteration Zone
-%     for i = 1: leftImageRows-1         %(i <= leftImageRows-1)
-%         for j = 1: leftImageColumns-1  %(j <= leftImageColumns-1)
-%             ta = imgLeft(i:windowSize+i,j:windowSize+j,:);
-%             [taFeature] = extractHOGFeatures(ta,'CellSize',[15 10]);
-%             for windowPos = 1: leftImageColumns-1
-%                 tb = imgRight(i:windowSize+i,windowPos:leftImageColumns,:);
-%                 [tbFeature] = extractHOGFeatures(tb,'CellSize',[15 10]);
-%                 %Eclidean Distance     
-%                 eD = sqrt(sum((taFeature(:)-tbFeature(:)).^2))
-%             end
-% %             if ((j == 1)&&(i == 1)) || ((j == 449)&&(i == 374))
-% %                 rectangle('Position',[j-windowOffset,i-windowOffset,windowSize,windowSize],'LineWidth',1, 'EdgeColor', 'r')
-% %             end
-%         end
-%     end
-      
-%     
-%     hold off
-%     % Extract the window's local position
-%     cut= imgLeft(1:31,1:31,:); % Is it necessary to copy the 3 matrix?
-%     figure
-%     imshow(cut);
-    
-
-
-
-
-
-
-
-
-%     figure
-%     imshow(imgRight);
-%     %Apply Hog in the provided 
-%     f= zeros(leftImageRows,leftImageColumns);
-%     [featureVector,hogVisualization] = extractHOGFeatures(imgLeft,'CellSize',[10 10]); % 15 10 (6 per Window), and 10 10 (9 per window)
-%     [featureVector1,hogVisualization1] = extractHOGFeatures(f,'CellSize',[10 10]); 
-%     disparityMap = featureVector1;
-%     disparityMap = max(disparityMap);
-%     figure;
-% %     imshow(imgLeft); 
-%     imshow(f); 
-%     hold on;
-%     plot(hogVisualization1);
-% %     plot(hogVisualization);
-%     hold off
-    
-
-
-
-
-
-
-
-    
+    % Iteration Zone
+    k=0;
+%     for i = windowOffset+1:leftImageRows+windowOffset 
+%       for j = windowOffset+1:leftImageColumns+windowOffset
+%           for jj = windowOffset+1: rightImageColumns+windowOffset
+    eD = ones(rightImageColumns,1);
+    for i = windowOffset+1:windowOffset+1     % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
+        for j = windowOffset+1:windowOffset+1 % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
+            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,:); %Extract Template from Left Image
+            [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]);
+            for jj = windowOffset+1: rightImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
+                tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,:);
+                [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
+                eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
+                k=k+1;
+            end
+            
+        end
+    end   
+    find(min(eD))% Gives the position of the smaller value
+    disp(k)
+    disparityMap = eD;
+    figure
+    imshow(tr)    
     %Going to the previous folder
     cd ..\
-    
 end
 
 
