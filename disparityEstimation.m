@@ -55,27 +55,28 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     
     % Declaring Matrices or Vectors
     % Matrices with more pixels (This Matrices must be uint8 type)
-    biggerImgLeft  = uint8(zeros(biggerImgLeftRows,biggerImgLeftColumns,1));  
-    biggerImgRight = uint8(ones(biggerImgRightRows,biggerImgRightColumns,1)*255);
+    biggerImgLeft  = uint8(zeros(biggerImgLeftRows,biggerImgLeftColumns,3));  
+    biggerImgRight = uint8(ones(biggerImgRightRows,biggerImgRightColumns,3)*255);
     disparityMap   = zeros(leftImageRows,leftImageColumns); 
     eD             = ones(1,leftImageColumns);
-    Auxi           = zeros(72,480);
+    Auxi           = zeros(144,480);
     %% Coding
     %Adding the image to the new matrix.
-    biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 1)  = imgLeft(:,:,1);
-    biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 1)= imgRight(:,:,1);   
-
+    biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 3)  = imgLeft(:,:,3);
+    biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 3)= imgRight(:,:,3);   
+    
+    %Iterartion Section
     for i = leftImageStartRowPosNew : leftImageEndRowPosNew           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
         %Fill all the Values of the RightImage
         for k = rightImageStartColumnPosNew: biggerImgRightColumns-windowOffset
-            tr = biggerImgRight(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,1);
-            [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);
+            tr = biggerImgRight(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,3);
+            [trFeature] = extractHOGFeatures(tr,'CellSize',[10 10]);
             Auxi(:,k-windowOffset)=trFeature;
         end
         
         for j = leftImageStartColumnPosNew : leftImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j)
-            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,1); %Extract Template from Left Image
-            [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]); %Apply HoG to the Template
+            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,3); %Extract Template from Left Image
+            [tlFeature] = extractHOGFeatures(tl,'CellSize',[10 10]); %Apply HoG to the Template
              for l = j : windowOffset+j
                  eD(l-windowOffset)= sqrt(sum((tlFeature(:)-Auxi(:,l-windowOffset)).^2));  %Eclidean Distance
              end
