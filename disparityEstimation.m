@@ -20,29 +20,84 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
         error('Please make sure that the images are inside the folder "ExampleImages"')
     end 
     
-    %Variables
+    %% Independant Variables
+    % Window properties
     windowSize = 31;  %Value of the dimensions of the window (Rectangle). IMPORTANT (Only Odd Numbers)
-    windowOffset =15; %Offset needed to put the desired pixel in the middle. IMPORTANT ((windowSize-1)/2)
-    leftImageRows = size(imgLeft,1);      %NumberOfRowsLeftImage 
+    %% Dependant Variables
+    % Window properties
+    windowOffset =(windowSize-1)/2; %Offset needed to put the desired pixel in the middle. IMPORTANT ((windowSize-1)/2)
+    
+    % Matrixes Dimensions
+    % Original leftImage 
+    leftImageRows    = size(imgLeft,1);   %NumberOfRowsLeftImage 
     leftImageColumns = size(imgLeft,2);   %NumberOfColumnsLeftImage
-    rightImageRows = size(imgRight,1);    %NumberOfRowsRightImage 
-    rightImageColumns = size(imgRight,2); %NumberOfColumnsRightImage
-    disparityMap = zeros(leftImageRows,leftImageColumns); %DM LeftImageSize
-    % New part creating a new matrix with more pixels (This Matrices must be uint8 type)
-    biggerImgLeft = uint8(zeros(leftImageRows+windowOffset*2,leftImageColumns+windowOffset*2,3));   % LeftImage + 2*WindowOffset in the edges  ********Maybe we only need 1 dimension and not 3******
-    biggerImgRight = uint8(ones(rightImageRows+windowOffset*2,rightImageColumns+windowOffset*2,3)*255);% RightImage + 2*WindowOffset in the edges ********Maybe we only need 1 dimension and not 3******
+    % Original rightImage
+    rightImageRows    = size(imgRight,1); %NumberOfRowsRightImage 
+    rightImageColumns = size(imgRight,2); %NumberOfColumnsRightImage 
+    % New leftImage (Bigger)
+    biggerImgLeftRows    = leftImageRows+windowOffset*2;    %NumberOfRowsLeftImage 
+    biggerImgLeftColumns = leftImageColumns+windowOffset*2; %NumberOfColumnsLeftImage 
+    % New RightImage (Bigger)
+    biggerImgRightRows    = rightImageRows+windowOffset*2;    %NumberOfRowRightImage 
+    biggerImgRightColumns = rightImageColumns+windowOffset*3; %NumberOfRowsRightImage (Special Case[It is used in the for loop])
+    
+    % Matrixes Positions (Bigger)
+    % New leftImage
+    leftImageStartRowPosNew     = windowOffset+1; 
+    leftImageEndRowPosNew       = leftImageRows+windowOffset;
+    leftImageStartColumnPosNew  = windowOffset+1;
+    leftImageEndColumnPosNew    = leftImageColumns+windowOffset;
+    %New rightImage
+    rightImageStartRowPosNew    = windowOffset+1;
+    rightImageEndRowPosNew      = rightImageRows+windowOffset;
+    rightImageStartColumnPosNew = windowOffset+1;
+    rightImageEndColumnPosNew   = rightImageColumns+windowOffset;
+    
+    % Declaring Matrices or Vectors
+    % Matrices with more pixels (This Matrices must be uint8 type)
+    biggerImgLeft  = uint8(zeros(biggerImgLeftRows,biggerImgLeftColumns,1));  
+    biggerImgRight = uint8(ones(biggerImgRightRows,biggerImgRightColumns,1)*255);
+    disparityMap   = zeros(leftImageRows,leftImageColumns); 
+    eD             = ones(1,leftImageColumns);
+    
+    %% Coding
     %Adding the image to the new matrix.
-    biggerImgLeft(windowOffset+1:leftImageRows+windowOffset,windowOffset+1:leftImageColumns+windowOffset,:)= imgLeft(:,:,:);
-    biggerImgRight(windowOffset+1:rightImageRows+windowOffset,windowOffset+1:rightImageColumns+windowOffset,:)= imgRight(:,:,:);
+    biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 1)  = imgLeft(:,:,1);
+    biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 1)= imgRight(:,:,1);   
 
-%     %Ploting Both Images (Report Material!!!!!!!)
+%     for i = windowOffset+1:leftImageRows+windowOffset      % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
+%         for j = windowOffset+1:leftImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
+%             tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,1); %Extract Template from Left Image
+%             [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]); %Apply HoG to the Template
+%             for jj = j: j+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
+%                 tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,1);
+%                 [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
+%                 eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
+%             end 
+%             disp(i)
+%             disp(j)
+% %             pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
+% %             eD(:)= 1;
+% %             disparityMap(i-windowOffset,j-windowOffset) = pos-j-windowOffset; %Updates the Matrix DisparityMap
+%         end
+%     end    
+    
+    %Going to the previous folder
+     cd ..\
+ end
+
+%#########################TO DO ##############################
+    % Optimize the Code
+%#############################################################
+    
+% %     Ploting Both Images (Report Material!!!!!!!)
 %     figure
 %     imshow(biggerImgLeft)
 %     figure
 %     imshow(biggerImgRight) %(End Report Material!!!!!!!) 
 
 %     %Extract the template from the new matrix (Report Material!!!!!!!) 
-%     ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,:);
+%     ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,1);
 %     [taFeature,tahogVisualization] = extractHOGFeatures(ta,'CellSize',[15 10]);
 %     tb = biggerImgRight(1:windowSize+1-1,1:windowSize+1-1,:);
 %     [tbFeature,tbhogVisualization] = extractHOGFeatures(tb,'CellSize',[15 10]);
@@ -60,35 +115,12 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
 %     hold on;
 %     plot(tbhogVisualization);
 %     rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'b')
-%     hold off                                                (End Report Material!!!!!!!) 
+%     hold off                                               % (End Report Material!!!!!!!) 
+%     disparityMap = taFeature;
     
-    %#########################TO DO ##############################
-    %Apply the HOG in the image for only 1 row of the new matrix
-    %Observavtions: Maybe the Edges of the images should be different (White Black)
-    %#############################################################
     
 %   Iteration Zone
 %     for i = windowOffset+1:leftImageRows+windowOffset 
 %       for j = windowOffset+1:leftImageColumns+windowOffset
 %           for jj = windowOffset+1: rightImageColumns+windowOffset
-   
-    eD = ones(1,rightImageColumns);
-    for i = windowOffset+1:windowOffset+1     % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
-        for j = windowOffset+1:leftImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
-            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,:); %Extract Template from Left Image
-            [tlFeature,tlhogVisualization] = extractHOGFeatures(tl,'CellSize',[15 10]);
-            for jj = windowOffset+1: rightImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
-                tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,:);
-                [trFeature,trhogVisualization] = extractHOGFeatures(tr,'CellSize',[15 10]);     
-                eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
-            end
-            pos =find(eD == min(eD))% Gives the position of the smaller value in the corespondence
-            disparityMap(i-windowOffset,j-windowOffset) = pos; %Updates the Matrix DisparityMap
-        end
-    end    
-    %Going to the previous folder
-    cd ..\
-end
-
-
 
