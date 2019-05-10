@@ -65,23 +65,20 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 1)  = imgLeft(:,:,1);
     biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 1)= imgRight(:,:,1);   
 
-%     for i = windowOffset+1:leftImageRows+windowOffset      % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
-%         for j = windowOffset+1:leftImageColumns+windowOffset % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
-%             tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,1); %Extract Template from Left Image
-%             [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]); %Apply HoG to the Template
-%             for jj = j: j+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
-%                 tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,1);
-%                 [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
-%                 eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
-%             end 
-%             disp(i)
-%             disp(j)
-% %             pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
-% %             eD(:)= 1;
-% %             disparityMap(i-windowOffset,j-windowOffset) = pos-j-windowOffset; %Updates the Matrix DisparityMap
-%         end
-%     end    
-    
+    for i = leftImageStartRowPosNew : leftImageEndRowPosNew           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
+        for j = leftImageStartColumnPosNew : leftImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
+            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,1); %Extract Template from Left Image
+            [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]); %Apply HoG to the Template
+            for jj = j: j+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
+                tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,1);
+                [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
+                eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
+            end 
+            pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
+            eD(:)= 255;
+            disparityMap(i-windowOffset,j-windowOffset) = pos(1)-(j-windowOffset); %Updates the Matrix DisparityMap
+        end
+    end      
     %Going to the previous folder
      cd ..\
  end
