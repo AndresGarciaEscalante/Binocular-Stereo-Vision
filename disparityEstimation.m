@@ -59,21 +59,26 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     biggerImgRight = uint8(ones(biggerImgRightRows,biggerImgRightColumns,1)*255);
     disparityMap   = zeros(leftImageRows,leftImageColumns); 
     eD             = ones(1,leftImageColumns);
-    
+    Auxi           = zeros(72,480);
     %% Coding
     %Adding the image to the new matrix.
     biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 1)  = imgLeft(:,:,1);
     biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 1)= imgRight(:,:,1);   
 
     for i = leftImageStartRowPosNew : leftImageEndRowPosNew           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
-        for j = leftImageStartColumnPosNew : leftImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j) 
+        %Fill all the Values of the RightImage
+        for k = rightImageStartColumnPosNew: biggerImgRightColumns-windowOffset
+            tr = biggerImgRight(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,1);
+            [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);
+            Auxi(:,k-windowOffset)=trFeature;
+        end
+        
+        for j = leftImageStartColumnPosNew : leftImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j)
             tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,1); %Extract Template from Left Image
             [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 10]); %Apply HoG to the Template
-            for jj = j: j+windowOffset % ColumnPositionOfTheCenterPointOfWindow[RightImage](ii)  ********Define a maximum number of Iterations******
-                tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,jj-windowOffset:windowSize+jj-1-windowOffset,1);
-                [trFeature] = extractHOGFeatures(tr,'CellSize',[15 10]);     
-                eD(jj-windowOffset)= sqrt(sum((tlFeature(:)-trFeature(:)).^2));  %Eclidean Distance
-            end 
+             for l = j : windowOffset+j
+                 eD(l-windowOffset)= sqrt(sum((tlFeature(:)-Auxi(:,l-windowOffset)).^2));  %Eclidean Distance
+             end
             pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
             eD(:)= 255;
             disparityMap(i-windowOffset,j-windowOffset) = pos(1)-(j-windowOffset); %Updates the Matrix DisparityMap
