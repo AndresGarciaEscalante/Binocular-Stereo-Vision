@@ -34,12 +34,19 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     % Original rightImage
     rightImageRows    = size(imgRight,1); %NumberOfRowsRightImage 
     rightImageColumns = size(imgRight,2); %NumberOfColumnsRightImage 
+%     % New leftImage (Bigger)
+%     biggerImgLeftRows    = leftImageRows+windowOffset*2;    %NumberOfRowsLeftImage 
+%     biggerImgLeftColumns = leftImageColumns+windowOffset*2; %NumberOfColumnsLeftImage 
+%     % New RightImage (Bigger)
+%     biggerImgRightRows    = rightImageRows+windowOffset*2;    %NumberOfRowRightImage 
+%     biggerImgRightColumns = rightImageColumns+windowOffset*4; %NumberOfRowsRightImage (Special Case[It is used in the for loop])
+    
     % New leftImage (Bigger)
     biggerImgLeftRows    = leftImageRows+windowOffset*2;    %NumberOfRowsLeftImage 
-    biggerImgLeftColumns = leftImageColumns+windowOffset*2; %NumberOfColumnsLeftImage 
+    biggerImgLeftColumns = leftImageColumns+windowOffset*4; %NumberOfColumnsLeftImage 
     % New RightImage (Bigger)
     biggerImgRightRows    = rightImageRows+windowOffset*2;    %NumberOfRowRightImage 
-    biggerImgRightColumns = rightImageColumns+windowOffset*3; %NumberOfRowsRightImage (Special Case[It is used in the for loop])
+    biggerImgRightColumns = rightImageColumns+windowOffset*2; %NumberOfRows
     
     % Matrixes Positions (Bigger)
     % New leftImage
@@ -59,71 +66,67 @@ function disparityMap = disparityEstimation(imageLeft,imageRight)
     biggerImgRight = uint8(ones(biggerImgRightRows,biggerImgRightColumns,3)*255);
     disparityMap   = zeros(leftImageRows,leftImageColumns); 
     eD             = ones(1,leftImageColumns);
-    Auxi           = zeros(144,480);
+%     Auxi           = zeros(36,biggerImgRightColumns); % The value 144 is for a 10 10 cell.
+     Auxi           = zeros(900,biggerImgLeftColumns);
     %% Coding
     %Adding the image to the new matrix.
-    biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , 3)  = imgLeft(:,:,3);
-    biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , 3)= imgRight(:,:,3);   
+    biggerImgLeft (leftImageStartRowPosNew  : leftImageEndRowPosNew , leftImageStartColumnPosNew : leftImageEndColumnPosNew , :)  = imgLeft(:,:,:);
+    biggerImgRight(rightImageStartRowPosNew : rightImageEndRowPosNew, rightImageStartColumnPosNew : rightImageEndColumnPosNew , :)= imgRight(:,:,:);   
     
+%     figure
+%     imshow(biggerImgLeft)
+%     
+%     figure
+%     imshow(biggerImgRight)
+    
+    %%Right Image
     %Iterartion Section
-    for i = leftImageStartRowPosNew : leftImageEndRowPosNew           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
+   
+    for i =  rightImageStartRowPosNew : rightImageEndRowPosNew           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
         %Fill all the Values of the RightImage
-        for k = rightImageStartColumnPosNew: biggerImgRightColumns-windowOffset
-            tr = biggerImgRight(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,3);
-            [trFeature] = extractHOGFeatures(tr,'CellSize',[10 10]);
-            Auxi(:,k-windowOffset)=trFeature;
+        for k = leftImageStartColumnPosNew: biggerImgLeftColumns-windowOffset
+            tl = biggerImgLeft(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,3);
+            [tlFeature] = extractHOGFeatures(tl,'CellSize',[5 5]);
+            Auxi(:,k-windowOffset)=tlFeature;
         end
         
-        for j = leftImageStartColumnPosNew : leftImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j)
-            tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,3); %Extract Template from Left Image
-            [tlFeature] = extractHOGFeatures(tl,'CellSize',[10 10]); %Apply HoG to the Template
-             for l = j : windowOffset+j
-                 eD(l-windowOffset)= sqrt(sum((tlFeature(:)-Auxi(:,l-windowOffset)).^2));  %Eclidean Distance
+        for j = rightImageStartColumnPosNew : rightImageEndColumnPosNew % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j)
+            tr = biggerImgRight(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,3); %Extract Template from Left Image
+            [trFeature] = extractHOGFeatures(tr,'CellSize',[5 5]); %Apply HoG to the Template
+             for l = j : windowOffset*2+j
+                 eD(l-windowOffset)= sqrt(sum((trFeature(:)-Auxi(:,l-windowOffset)).^2));  %Eclidean Distance
              end
             pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
             eD(:)= 255;
             disparityMap(i-windowOffset,j-windowOffset) = pos(1)-(j-windowOffset); %Updates the Matrix DisparityMap
         end
-    end      
+    end     
+    imshow(disparityMap)
+    
+    %%Left Image
+%     %Iterartion Section
+%     for i = 50 : 150           % RowPositionOfTheCenterPointOfWindow[LeftImage] (i)
+%         %Fill all the Values of the RightImage
+%         for k = rightImageStartColumnPosNew: biggerImgRightColumns-windowOffset
+%             tr = biggerImgRight(i-windowOffset : windowSize+i-1-windowOffset  ,  k-windowOffset : windowSize+k-1-windowOffset,3);
+%             [trFeature] = extractHOGFeatures(tr,'CellSize',[15 15]);
+%             figure
+%             imshow(tr)
+%             Auxi(:,k-windowOffset)=trFeature;
+%         end
+%         
+%         for j = 280 : 450 % ColumnPositionOfTheCenterPointOfWindow[LeftImage] (j)
+%             tl = biggerImgLeft(i-windowOffset:windowSize+i-1-windowOffset,j-windowOffset:windowSize+j-1-windowOffset,3); %Extract Template from Left Image
+%             [tlFeature] = extractHOGFeatures(tl,'CellSize',[15 15]); %Apply HoG to the Template
+%              for l = j : windowOffset*2+j
+%                  eD(l-windowOffset)= sqrt(sum((tlFeature(:)-Auxi(:,l-windowOffset)).^2));  %Eclidean Distance
+%              end
+%             pos =find(eD == min(eD));% Gives the position of the smaller value in the corespondence
+%             eD(:)= 255;
+%             disparityMap(i-windowOffset,j-windowOffset) = pos(1)-(j-windowOffset); %Updates the Matrix DisparityMap
+%         end
+%     end     
+%     imshow(disparityMap)
     %Going to the previous folder
      cd ..\
- end
-
-%#########################TO DO ##############################
-    % Optimize the Code
-%#############################################################
-    
-% %     Ploting Both Images (Report Material!!!!!!!)
-%     figure
-%     imshow(biggerImgLeft)
-%     figure
-%     imshow(biggerImgRight) %(End Report Material!!!!!!!) 
-
-%     %Extract the template from the new matrix (Report Material!!!!!!!) 
-%     ta = biggerImgLeft(1:windowSize+1-1,1:windowSize+1-1,1);
-%     [taFeature,tahogVisualization] = extractHOGFeatures(ta,'CellSize',[15 10]);
-%     tb = biggerImgRight(1:windowSize+1-1,1:windowSize+1-1,:);
-%     [tbFeature,tbhogVisualization] = extractHOGFeatures(tb,'CellSize',[15 10]);
-%     figure('Name', "Templates Image Left and Image Right"); 
-%     %Plotting the Template A
-%     subplot(2,1,1);
-%     imshow(ta); 
-%     hold on;
-%     plot(tahogVisualization);
-%     rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'r')
-%     hold off
-%     %Plotting the Template B
-%     subplot(2,1,2);
-%     imshow(tb); 
-%     hold on;
-%     plot(tbhogVisualization);
-%     rectangle('Position',[1, 1, 30, 30],'LineWidth',1, 'EdgeColor', 'b')
-%     hold off                                               % (End Report Material!!!!!!!) 
-%     disparityMap = taFeature;
-    
-    
-%   Iteration Zone
-%     for i = windowOffset+1:leftImageRows+windowOffset 
-%       for j = windowOffset+1:leftImageColumns+windowOffset
-%           for jj = windowOffset+1: rightImageColumns+windowOffset
-
+end
